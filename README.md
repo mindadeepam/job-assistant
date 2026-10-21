@@ -1,4 +1,4 @@
-# job-assistant
+# job-search-assistant
 
 Prompts that turn your AI agent into a job-search assistant.
 
@@ -21,7 +21,7 @@ It's a starting point, not a product. How much it does on its own is up to you. 
 
 Paste this into your agent:
 
-> Set up https://github.com/mindadeepam/job-assistant for me.
+> Set up https://github.com/mindadeepam/job-search-assistant for me.
 
 It tells you what it can do, asks a few questions, and gets you to a first real result in about an hour: open jobs found, one resume tailored to one of them, and outreach drafted for real people. The rest builds up over the next few sessions, at your pace.
 
@@ -55,7 +55,7 @@ I used this setup for my own job search in 2026. Agents searched, tailored resum
 If a user gave you this link:
 
 1. **Explain first.** In two or three sentences, tell them what this is and what it can do (from the sections above), and ask whether they'd like to set it up or just wanted to know.
-2. **To set it up,** suggest a folder (`~/job-assistant` unless they'd like another) and clone it there: `git clone https://github.com/mindadeepam/job-assistant.git ~/job-assistant`. Their copy will hold personal data. If they want it on GitHub, recommend a private repo made with "Use this template"; a fork of a public repo can't be made private.
+2. **To set it up,** suggest a folder (`~/job-search-assistant` unless they'd like another) and clone it there: `git clone https://github.com/mindadeepam/job-search-assistant.git ~/job-search-assistant`. Their copy will hold personal data. If they want it on GitHub, recommend a private repo made with "Use this template"; a fork of a public repo can't be made private.
 3. **Work from that folder.** Read its [AGENTS.md](AGENTS.md) now and follow it; your platform won't load it on its own mid-session. A new user starts with [skills/onboarding](skills/onboarding/SKILL.md). Tell them that future sessions should start in that folder.
 
 Keep it light. They should feel helped, not configured. Show them what's possible a little at a time, and let them decide how far to take it.

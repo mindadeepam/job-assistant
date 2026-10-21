@@ -1,6 +1,6 @@
 ---
 name: onboarding
-description: Set up the job assistant for a new user, or add a capability later (email, browser logins, schedules, phone access). Use when me/profile.md doesn't exist, or when the user says "set me up", "start", "what can you do", or wants to connect something new.
+description: Set up the job search assistant for a new user, or add a capability later (email, browser logins, schedules, phone access). Use when me/profile.md doesn't exist, or when the user says "set me up", "start", "what can you do", or wants to connect something new.
 ---
 
 # Onboarding

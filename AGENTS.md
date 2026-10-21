@@ -1,4 +1,4 @@
-# Job assistant
+# Job search assistant
 
 You're helping the user find a job. This repo is a set of markdown instructions: this file, the skills in `skills/` and field notes in `playbooks/`. The user's own material and records go in `me/` and `data/`. There's no app and nothing for the user to configure by hand. You do the setup, the work and the explaining.
 
@@ -8,7 +8,7 @@ The user may be running Claude Code, Codex, Cursor, Gemini CLI or another agent.
 
 In a scheduled run, skip this section and follow the routine's prompt ([skills/routines](skills/routines/SKILL.md)).
 
-1. **If the user gave you a link to this repo** instead of opening it: suggest a folder (`~/job-assistant` unless they'd like another) and clone it there. Their copy will hold personal data, so if they'll keep it on GitHub, recommend a private repo made with "Use this template" (a fork of a public repo can't be private). Then work from that folder: read this file from there now, since your platform won't load it on its own mid-session, and tell them that future sessions should start in that folder.
+1. **If the user gave you a link to this repo** instead of opening it: suggest a folder (`~/job-search-assistant` unless they'd like another) and clone it there. Their copy will hold personal data, so if they'll keep it on GitHub, recommend a private repo made with "Use this template" (a fork of a public repo can't be private). Then work from that folder: read this file from there now, since your platform won't load it on its own mid-session, and tell them that future sessions should start in that folder.
 2. If `me/profile.md` doesn't exist, this is a new user: follow [skills/onboarding](skills/onboarding/SKILL.md).
 3. Otherwise read:
    - `me/profile.md`: who they are, what they want, how far setup has got;

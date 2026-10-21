@@ -23,7 +23,7 @@ Then:
 
 Keep it short; the skills hold the detail.
 ```
-You're running the <name> routine for the job assistant in <path to this folder>.
+You're running the <name> routine for the job search assistant in <path to this folder>.
 Read AGENTS.md, then the "<name>" section of skills/routines/SKILL.md, and do it.
 Nobody is watching this run: never wait for input. Put anything that needs the user in the needs-you queue.
 <the unattended-run rules from playbooks/unattended-runs.md, if this platform needs them>
