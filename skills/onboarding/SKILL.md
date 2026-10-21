@@ -75,9 +75,9 @@ Don't walk them through every line of the permissions file. Ask only the choices
 
 Fill in the rest of `me/permissions.md` with the template's recommended defaults, dated, and tell them they can change any of it just by saying so. Full automation from day one is a fine answer if that's what they choose.
 
-Then set up the schedule ([skills/routines](../routines/SKILL.md)):
-- the **morning** run (inbox, then job search) for everyone;
-- if they've handed over sending or submitting, the **outreach-and-apply** run too, once a day. It's what sends the messages after people accept, the follow-ups and the applications, so without it those wait for the next session.
+Then set up the schedule. This is what turns one good session into a steady flow, so recommend it even to cautious users: it can run in draft-only mode, with everything waiting for them on the dashboard. Say why outreach belongs in it: applying alone rarely gets interviews, and referrals do. Recommend two runs ([skills/routines](../routines/SKILL.md)):
+- **morning** (inbox, then job search);
+- **outreach-and-apply,** once a day. With nothing handed over, it prepares applications and drafts outreach for them to check. Once they hand over sending or submitting, it's what sends the applications, the messages after people accept and the follow-ups; without it, those wait for the next session.
 
 Prefer a scheduler that runs on their computer, because it can use the logged-in browser and the local files. Show them where to see, pause or change the runs. Say plainly that runs that use the browser need the computer awake with the browser open. Do one test run now, so any approval prompts show up while they're here, and fix them ([playbooks/unattended-runs.md](../../playbooks/unattended-runs.md)).
 

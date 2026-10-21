@@ -15,6 +15,8 @@ A set of markdown instructions, plus a few small files. Give it to an AI agent t
 
 It's a starting point, not a product. How much it does on its own is up to you. It can draft everything for you to send, or run most of it on a schedule while you only handle replies and interviews. Anything about how it works can be changed by asking your agent.
 
+**Why bother?** Getting interviews is partly a numbers game, and the volume is hard to keep up by hand. Even ten good applications a day, each with a tailored resume and a referral request or two, is exhausting. Run on a schedule, twice a day while your laptop is on, this keeps a steady flow going in the background. And it doesn't stop at applying: a referral from someone on the team gets you to an interview far more often than a cold application does.
+
 ## Try it
 
 Paste this into your agent:
@@ -28,7 +30,7 @@ Prefer to do it by hand? Make your own copy with "Use this template" (keep it **
 ## Good to know first
 
 - **It will make mistakes.** It can send and submit on its own from day one, but it's worth checking the first few of everything before you let it run. Your corrections become rules it follows from then on.
-- **Use it in good faith.** Honest applications, and messages to people who are actually relevant to the role. Mass messaging strangers is spam, and it's your name on every message. How you use it is your call, and so are the consequences.
+- **It's not a cheat code. Use it in good faith.** Honest applications, and messages to people who are actually relevant to the role. Nobody wants AI-written messages back to back. People report spam, and it's your name and your account on every message. Keep an eye on what goes out and how often, especially in the first weeks. How you use it is your call, and so are the consequences.
 - **Sites have rules.** LinkedIn's terms prohibit automated activity, so any sending done for you can get your account restricted. It starts at a moderate pace, speeds up while there are no warnings, and backs off when one appears.
 - **It reads strangers' messages.** Emails and job pages can contain text meant to trick an agent. It treats everything it reads as information, never as instructions, but keep an eye on what it sends.
 - **Everything comes from you.** It claims only what you've told it or shared with it.
