@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job dashboard</title>
+<style>
+/* Layout: the day's work as a few short sittings on the left, what's coming and what the agent did on the right.
+   Open a sitting and it becomes a one-item-at-a-time flow. Restyle freely; build.py only fills in the data block. */
+:root{
+  --bg:#F3F4F1; --surf:#FFFFFF; --ink:#16191D; --mut:#6B7178; --line:#E2E4DF;
+  --act:#2F54EB; --act-ink:#FFFFFF; --soon:#B97A0E; --late:#C83E2B; --ok:#23895B; --tint:#EEF1FD;
+  --txt: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#111315; --surf:#181B1E; --ink:#ECEDEA; --mut:#8D939A; --line:#262A2E;
+    --act:#7B96FF; --act-ink:#0D1020; --soon:#E5A93D; --late:#F07A63; --ok:#5BC48E; --tint:#1C2238; color-scheme: dark; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--txt);font-size:14px;line-height:1.45}
+button,input{font:inherit;color:inherit}
+a{color:var(--act)}
+:focus-visible{outline:2px solid var(--act);outline-offset:2px}
+
+.home{padding:28px 32px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:40px}
+.date{font-weight:750;font-size:clamp(30px,4.2vw,50px);letter-spacing:-.025em;line-height:1;margin:0}
+.sub{color:var(--mut);margin:10px 0 0;font-size:15px}
+.sub b{color:var(--ink);font-weight:600}
+.moment{margin:26px 0 30px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px 28px;align-items:end}
+.big{font-size:40px;font-weight:750;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.lbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-top:6px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:56px}
+.bars i{display:block;flex:1;background:var(--line);border-radius:3px 3px 0 0;min-height:2px}
+.bars i.hi{background:var(--act)}
+h3.sec{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin:0 0 10px;font-weight:600}
+
+.sits{display:flex;flex-direction:column;border-top:1px solid var(--line);margin-bottom:36px}
+.sit{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 4px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%;cursor:pointer}
+.sit:hover{background:var(--surf)}
+.sit .n{font-weight:750;font-size:44px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.sit .nm{font-size:20px;font-weight:650;letter-spacing:-.01em}
+.sit .ds{color:var(--mut);font-size:13.5px;margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.chip{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--surf);border:1px solid var(--line);white-space:nowrap}
+.chip.due{border-color:color-mix(in srgb,var(--late) 45%,transparent);color:var(--late)}
+.sit .go{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.time{font-family:var(--mono);font-size:12px;color:var(--mut)}
+.btn{border:0;border-radius:9px;padding:9px 14px;font-weight:600;cursor:pointer;background:var(--act);color:var(--act-ink);font-size:13.5px;white-space:nowrap;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.empty{padding:22px 4px;color:var(--mut);border-bottom:1px solid var(--line)}
+
+.filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.filters button{border:1px solid var(--line);background:var(--surf);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}
+.filters button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters input{margin-left:auto;min-width:180px;border:1px solid var(--line);background:var(--surf);border-radius:8px;padding:5px 10px}
+.tbl{overflow-x:auto}
+table.jobs{width:100%;border-collapse:collapse;font-size:13.5px}
+.jobs th{text-align:left;font-weight:600;font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;padding:8px;border-bottom:1px solid var(--ink)}
+.jobs td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.jobs td.num{font-family:var(--mono);white-space:nowrap}
+.jobs .why{color:var(--mut);font-size:12.5px;margin-top:2px}
+.pill{display:inline-block;font-size:11.5px;border-radius:999px;padding:1px 8px;white-space:nowrap;font-weight:600;background:var(--tint)}
+.more{color:var(--mut);font-size:12.5px;padding:10px 8px}
+
+.rail h3.sec{margin-top:4px}
+.tl,.log{list-style:none;padding:0;margin:0 0 30px}
+.tl li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.tl .d{font-family:var(--mono);font-size:11.5px;color:var(--mut);padding-top:2px}
+.tl .w{color:var(--mut);font-size:12px;margin-top:2px}
+.tl li.urgent .d{color:var(--late);font-weight:600}
+.funnel{display:flex;gap:2px;margin:6px 0 30px;font-size:12px}
+.funnel div{flex:1;background:var(--surf);border:1px solid var(--line);padding:8px;border-radius:6px;min-width:0}
+.funnel b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.funnel span{color:var(--mut)}
+.log li{display:grid;grid-template-columns:7px minmax(0,1fr);gap:9px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.log .dot{width:7px;height:7px;border-radius:50%;margin-top:6px;background:var(--ok)}
+.log li.warn .dot{background:var(--soon)}
+.log .h{font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+.log .h b{color:var(--ink);font-weight:600}
+.log .wn{color:var(--soon);font-size:12.5px;margin-top:2px}
+
+/* one item at a time */
+.focus{position:fixed;inset:0;background:var(--bg);display:grid;grid-template-rows:auto minmax(0,1fr) auto;z-index:5}
+.ftop{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--line);min-width:0}
+.back{background:none;border:0;cursor:pointer;color:var(--mut);font-size:13.5px;padding:4px 0}
+.ttl{font-weight:700;font-size:19px;white-space:nowrap}
+.prog{flex:1;display:flex;gap:3px;min-width:60px}
+.prog i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.prog i.done{background:var(--ok)}
+.prog i.cur{background:var(--act)}
+.cnt{font-family:var(--mono);font-size:12.5px;color:var(--mut);white-space:nowrap}
+.item{overflow:auto;padding:34px clamp(16px,5vw,64px) 40px}
+.card{max-width:760px;margin:0 auto}
+.kick{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);font-weight:600}
+.card h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;line-height:1.15;margin:8px 0 6px}
+.meta{color:var(--mut);font-size:14px}
+.meta .late{color:var(--late);font-weight:600}
+.detail{margin:22px 0;padding:14px 16px;background:var(--surf);border:1px solid var(--line);border-radius:12px;font-size:15px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.note{color:var(--mut);font-size:12.5px;margin-top:18px}
+.fkeys{display:flex;flex-wrap:wrap;gap:10px;padding:12px 24px;border-top:1px solid var(--line);align-items:center}
+.key{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--surf);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:13.5px;font-weight:500}
+.key kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--mut);background:var(--bg)}
+.key.primary{background:var(--act);color:var(--act-ink);border-color:var(--act)}
+.key.primary kbd{background:transparent;color:inherit;border-color:color-mix(in srgb,var(--act-ink) 40%,transparent)}
+.fkeys .sp{flex:1}
+
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .home{padding:20px 16px 40px}
+  .ftop,.fkeys{padding:10px 16px}
+  .filters input{margin-left:0;flex:1}
+}
+@media (max-width:560px){
+  .sit{grid-template-columns:52px minmax(0,1fr)}
+  .sit .go{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}
+  .sit .n{font-size:34px}
+  .key kbd{display:none}
+  .jobs .hide-s{display:none}
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById("data").textContent);
+const app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const safeUrl = u => /^https?:\/\//i.test(u || "") ? u : "";
+
+// Times without an offset are UTC (SQLite's datetime('now')); bare dates are local days.
+function when(s) {
+  if (!s) return null;
+  if (/^\d{4}-\d\d-\d\d$/.test(s)) return new Date(s + "T00:00:00");
+  if (/^\d{4}-\d\d-\d\d[ T]\d\d:\d\d(:\d\d(\.\d+)?)?$/.test(s)) return new Date(s.replace(" ", "T") + "Z");
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+const NOW = new Date();
+const DAY = 864e5;
+function rel(d) {
+  if (!d) return "";
+  const m = Math.round((d - NOW) / 6e4), a = Math.abs(m);
+  const t = a < 60 ? `${a} min` : a < 1440 ? `${Math.round(a / 60)} h` : `${Math.round(a / 1440)} day${Math.round(a / 1440) === 1 ? "" : "s"}`;
+  return m >= 0 ? `in ${t}` : `${t} ago`;
+}
+const short = d => d ? d.toLocaleDateString(undefined, {day: "numeric", month: "short"}) : "";
+const hm = d => d ? d.toLocaleTimeString(undefined, {hour: "2-digit", minute: "2-digit"}) : "";
+const soon = d => d && d - NOW < DAY;
+
+// Done marks live only in this browser. The agent clears items in the ledger on its next run, or when told.
+let done = new Set();
+try { done = new Set(JSON.parse(localStorage.getItem("jobdash-done") || "[]")); } catch (e) {}
+const saveDone = () => { try { localStorage.setItem("jobdash-done", JSON.stringify([...done])); } catch (e) {} };
+
+const SIT = {
+  deadline: {name: "Interviews and tests", desc: "Confirm times and watch the deadlines.", min: 5, kinds: ["interview", "assessment"]},
+  reply:    {name: "Replies", desc: "People wrote back. A draft reply is ready for each.", min: 3, kinds: ["reply"]},
+  review:   {name: "Drafts to check", desc: "Notes, messages and applications waiting for your OK.", min: 2, kinds: ["review"]},
+  ask:      {name: "Questions and decisions", desc: "Things only you can answer or decide, offers included.", min: 2, kinds: ["question", "decision"]},
+  login:    {name: "Sign-ins", desc: "Applications stuck at a login. Sign in once per portal and the agent does the rest.", min: 4, kinds: ["login"]},
+};
+const sitOf = n => Object.keys(SIT).find(k => SIT[k].kinds.includes(n.kind)) || "ask";
+const needs = D.needs.map(n => ({...n, dueD: when(n.due), sit: sitOf(n)}));
+const open = k => needs.filter(n => n.sit === k && !done.has(n.id));
+const host = u => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return "other"; } };
+
+function home() {
+  const all = needs.filter(n => !done.has(n.id));
+  const mins = all.reduce((s, n) => s + SIT[n.sit].min, 0);
+  const lastRun = when(D.runs[0]?.started_at);
+  const days = [...Array(14)].map((_, i) => { const d = new Date(NOW - (13 - i) * DAY); d.setHours(0, 0, 0, 0); return d; });
+  const perDay = days.map(d => D.jobs.filter(j => { const a = when(j.applied_at); return a && a >= d && a - d < DAY; }).length);
+  const max = Math.max(...perDay, 1);
+  const st = {}; D.jobs.forEach(j => st[j.status] = (st[j.status] || 0) + 1);
+  const ppl = {}; D.people.forEach(p => ppl[p.status] = p.n);
+  const applied = ["applied", "interviewing", "offer", "rejected"].reduce((s, k) => s + (st[k] || 0), 0);
+  const upcoming = all.filter(n => n.dueD && n.dueD - NOW > -DAY && n.dueD - NOW < 14 * DAY).sort((a, b) => a.dueD - b.dueD).slice(0, 8);
+
+  const sits = Object.keys(SIT).map(k => ({k, items: open(k)})).filter(s => s.items.length);
+  const sitHtml = sits.length ? sits.map(({k, items}) => {
+    const dueN = items.filter(n => soon(n.dueD)).length;
+    let labels = items.map(n => n.company || n.title);
+    if (k === "login") { const c = {}; items.forEach(n => { const h = host(n.link); c[h] = (c[h] || 0) + 1; }); labels = Object.entries(c).sort((a, b) => b[1] - a[1]).map(([h, n]) => `${h} ${n}`); }
+    const uniq = [...new Set(labels)];
+    return `<button class="sit" data-sit="${k}"><div class="n">${items.length}</div>
+      <div><div class="nm">${SIT[k].name}</div><div class="ds">${SIT[k].desc}</div>
+      <div class="chips">${dueN ? `<span class="chip due">${dueN} due within a day</span>` : ""}${uniq.slice(0, 5).map(l => `<span class="chip">${esc(l)}</span>`).join("")}${uniq.length > 5 ? `<span class="chip">+${uniq.length - 5}</span>` : ""}</div></div>
+      <div class="go"><span class="time">~${items.length * SIT[k].min} min</span><span class="btn">Start</span></div></button>`;
+  }).join("") : `<div class="empty">Nothing needs you right now.</div>`;
+
+  app.innerHTML = `<div class="home"><div class="wrap">
+    <section>
+      <h1 class="date">${NOW.toLocaleDateString(undefined, {weekday: "long", day: "numeric", month: "long"})}</h1>
+      <p class="sub"><b>${all.length}</b> thing${all.length === 1 ? "" : "s"} need${all.length === 1 ? "s" : ""} you${all.length ? `, about <b>${mins} min</b>` : ""}. ${lastRun ? `The agent last ran <b>${rel(lastRun)}</b>.` : "No runs yet."}</p>
+      <div class="moment">
+        <div><div class="big">${perDay.reduce((a, b) => a + b, 0)}</div><div class="lbl">applied in 14 days</div></div>
+        <div class="bars" aria-label="Applications per day, last 14 days">${perDay.map((n, i) => `<i class="${i === 13 ? "hi" : ""}" style="height:${Math.max(3, n / max * 100)}%" title="${short(days[i])}: ${n}"></i>`).join("")}</div>
+      </div>
+      <h3 class="sec">Sittings</h3>
+      <div class="sits">${sitHtml}</div>
+      <h3 class="sec">Jobs</h3>
+      <div id="jobs"></div>
+    </section>
+    <aside class="rail">
+      <h3 class="sec">Coming up</h3>
+      <ul class="tl">${upcoming.length ? upcoming.map(n => `<li class="${soon(n.dueD) ? "urgent" : ""}"><div class="d">${short(n.dueD)}<br>${hm(n.dueD)}</div><div><div>${esc(n.title)}</div><div class="w">${esc([n.company, rel(n.dueD)].filter(Boolean).join(" · "))}</div></div></li>`).join("") : `<li><div class="d">—</div><div class="w">No deadlines in the next two weeks.</div></li>`}</ul>
+      <h3 class="sec">Pipeline</h3>
+      <div class="funnel">
+        <div><b>${D.jobs.length}</b><span>found</span></div>
+        <div><b>${applied}</b><span>applied</span></div>
+        <div><b>${(ppl.replied || 0) + (ppl.referred || 0)}</b><span>replied</span></div>
+        <div><b>${st.interviewing || 0}</b><span>interviews</span></div>
+        <div><b>${st.offer || 0}</b><span>offers</span></div>
+      </div>
+      <h3 class="sec">Agent log</h3>
+      <ul class="log">${D.runs.length ? D.runs.slice(0, 15).map(r => { const s = when(r.started_at); return `<li class="${r.warnings ? "warn" : ""}"><span class="dot"></span><div><div class="h">${short(s)} ${hm(s)} · <b>${esc(r.what)}</b></div><div>${esc(r.summary || "")}</div>${r.warnings ? `<div class="wn">${esc(r.warnings)}</div>` : ""}</div></li>`; }).join("") : `<li><span class="dot"></span><div class="h">Nothing yet.</div></li>`}</ul>
+    </aside>
+  </div></div>`;
+  app.querySelectorAll(".sit").forEach(b => b.addEventListener("click", () => start(b.dataset.sit)));
+  jobs();
+}
+
+let filter = "all", query = "";
+function jobs() {
+  const box = document.getElementById("jobs");
+  if (!box) return;
+  const counts = {}; D.jobs.forEach(j => counts[j.status] = (counts[j.status] || 0) + 1);
+  const q = query.toLowerCase();
+  const list = D.jobs.filter(j => (filter === "all" || j.status === filter) && (!q || `${j.company} ${j.title} ${j.location}`.toLowerCase().includes(q)))
+    .sort((a, b) => (b.fit || 0) - (a.fit || 0));
+  const shown = list.slice(0, 200);
+  box.innerHTML = `<div class="filters">
+      ${["all", ...Object.keys(counts)].map(s => `<button data-f="${esc(s)}" class="${s === filter ? "on" : ""}">${esc(s)} ${s === "all" ? D.jobs.length : counts[s]}</button>`).join("")}
+      <input id="q" type="search" placeholder="Search company or role" value="${esc(query)}">
+    </div>
+    <div class="tbl"><table class="jobs"><thead><tr><th>Fit</th><th>Role</th><th class="hide-s">Where</th><th>Status</th><th class="hide-s">Found</th></tr></thead><tbody>
+    ${shown.map(j => { const u = safeUrl(j.url); return `<tr><td class="num">${esc(j.fit ?? "–")}</td>
+      <td><div>${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(j.title)}</a>` : esc(j.title)} · <b>${esc(j.company)}</b></div>${j.fit_why ? `<div class="why">${esc(j.fit_why)}</div>` : ""}</td>
+      <td class="hide-s">${esc([j.location, j.mode].filter(Boolean).join(" · "))}</td>
+      <td><span class="pill">${esc(j.status)}</span></td>
+      <td class="num hide-s">${short(when(j.found_at))}</td></tr>`; }).join("")}
+    </tbody></table></div>${list.length > shown.length ? `<div class="more">Showing ${shown.length} of ${list.length}. Search to narrow it down.</div>` : ""}${!list.length ? `<div class="more">No jobs here yet.</div>` : ""}`;
+  box.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => { filter = b.dataset.f; jobs(); }));
+  const qi = document.getElementById("q");
+  qi.addEventListener("input", () => { query = qi.value; const pos = qi.selectionStart; jobs(); const n = document.getElementById("q"); n.focus(); n.setSelectionRange(pos, pos); });
+}
+
+let list = [], idx = 0, sitKey = null;
+function start(k) { sitKey = k; list = open(k); idx = 0; focus(); }
+function focus() {
+  const left = list.filter(n => !done.has(n.id)).length;
+  const n = list[idx];
+  const link = n && safeUrl(n.link);
+  const body = !left ? `<div class="card"><div class="kick">All clear</div><h2>That's this sitting done.</h2><p class="meta">Tell your agent what you did, or it will notice on its next run.</p></div>`
+    : `<div class="card">
+      <div class="kick">${esc([n.kind, n.company].filter(Boolean).join(" · "))}</div>
+      <h2>${esc(n.title)}</h2>
+      <div class="meta">${esc(n.job_title || "")}${n.dueD ? ` · <span class="${soon(n.dueD) ? "late" : ""}">due ${esc(rel(n.dueD))} (${short(n.dueD)} ${hm(n.dueD)})</span>` : ""}</div>
+      ${n.detail ? `<div class="detail">${esc(n.detail)}</div>` : ""}
+      <div class="row">${link ? `<a class="btn" href="${esc(link)}" target="_blank" rel="noopener">Open</a>` : ""}${n.detail ? `<button class="btn ghost" id="copy">Copy text</button>` : ""}</div>
+      ${done.has(n.id) ? `<p class="note">Marked done in this browser.</p>` : ""}
+    </div>`;
+  app.innerHTML = `<div class="focus">
+    <div class="ftop"><button class="back" id="back">← Sittings</button><div class="ttl">${SIT[sitKey].name}</div>
+      <div class="prog">${list.map((x, i) => `<i class="${done.has(x.id) ? "done" : i === idx ? "cur" : ""}"></i>`).join("")}</div>
+      <div class="cnt">${list.length - left} of ${list.length}</div></div>
+    <div class="item">${body}</div>
+    <div class="fkeys">${left ? `<button class="key primary" data-a="done"><kbd>D</kbd>Done</button><span class="sp"></span><button class="key" data-a="prev"><kbd>K</kbd>Prev</button><button class="key" data-a="next"><kbd>J</kbd>Next</button>` : `<span class="sp"></span><button class="key primary" data-a="home"><kbd>Esc</kbd>Back to sittings</button>`}</div>
+  </div>`;
+  document.getElementById("back").onclick = home;
+  app.querySelectorAll("[data-a]").forEach(b => b.onclick = () => act(b.dataset.a));
+  const c = document.getElementById("copy");
+  if (c) c.onclick = () => navigator.clipboard?.writeText(n.detail).then(() => { c.textContent = "Copied"; }, () => {});
+}
+function act(a) {
+  if (a === "home") return home();
+  if (a === "prev") idx = Math.max(0, idx - 1);
+  if (a === "next") idx = Math.min(list.length - 1, idx + 1);
+  if (a === "done" && list[idx]) {
+    done.add(list[idx].id); saveDone();
+    const nxt = list.findIndex((x, i) => i > idx && !done.has(x.id));
+    idx = nxt >= 0 ? nxt : Math.max(0, list.findIndex(x => !done.has(x.id)));
+  }
+  focus();
+}
+document.addEventListener("keydown", e => {
+  if (!document.querySelector(".focus") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === "escape") home();
+  else if (k === "j" || e.key === "ArrowRight") act("next");
+  else if (k === "k" || e.key === "ArrowLeft") act("prev");
+  else if (k === "d") act("done");
+});
+home();
+</script>
+</body>
+</html>
